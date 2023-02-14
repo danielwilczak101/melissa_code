@@ -124,7 +124,7 @@ with open(folder / "gallo_on_premise.csv", mode="r", newline="", encoding="utf8"
         data.tdlinx = row["TDLinx Code"]
         data.channel = row["Channel"]
         data.sub_channel = row["Sub-Channel"]
-        data.is_in_gallow = True
+        data.is_in_gallo = True
 
 # Load the Spectra on-premise file.
 with open(folder / "spectra_on_premise.csv", mode="r", newline="", encoding="utf8") as file:
