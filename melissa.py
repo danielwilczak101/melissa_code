@@ -182,6 +182,14 @@ with open(folder / "ww_off_premise.csv", mode="r", newline="", encoding="utf8") 
         data.sold_to = row['sold_to']
         data.is_in_ww = True
 
+empty = Key("", "", "", "", "")
+
+if empty in on_premise:
+    del on_premise[empty]
+
+if empty in off_premise:
+    del off_premise[empty]
+
 # Save results to a csv file.
 with open("On-Premise.csv", mode="w", newline="", encoding="utf8") as file:
     # Use csv.DictWriter to write each row.
