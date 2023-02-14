@@ -215,7 +215,7 @@ fuzzy_keys = FuzzyFrozenDict(
 fuzzy_on_premise = defaultdict(Data)
 
 for i, key in enumerate(on_premise):
-    print(f"Progress: {i / len(on_premise):.1f}\r")
+    print(f"Progress: {i / len(on_premise):.1%}\r")
     address = f"{key.customer_name} | {key.address} | {key.city}"
     for fuzzy_key in fuzzy_keys.fuzzy().matches(address):
         fuzzy_data = fuzzy_on_premise[fuzzy_keys[fuzzy_key]]
@@ -243,7 +243,7 @@ fuzzy_keys = FuzzyFrozenDict(
 fuzzy_off_premise = defaultdict(Data)
 
 for i, key in enumerate(off_premise):
-    print(f"Progress: {i / len(off_premise):.1f}\r")
+    print(f"Progress: {i / len(off_premise):.1%}\r")
     address = f"{key.customer_name} | {key.address} | {key.city}"
     for fuzzy_key in fuzzy_keys.fuzzy().matches(address):
         fuzzy_data = fuzzy_off_premise[fuzzy_keys[fuzzy_key]]
