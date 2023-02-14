@@ -214,7 +214,8 @@ fuzzy_keys = FuzzyFrozenDict(
 
 fuzzy_on_premise = defaultdict(Data)
 
-for key in on_premise:
+for i, key in enumerate(on_premise):
+    print(f"Progress: {i / len(on_premise):.1f}\r")
     address = f"{key.customer_name} | {key.address} | {key.city}"
     for fuzzy_key in fuzzy_keys.fuzzy().matches(address):
         fuzzy_data = fuzzy_on_premise[fuzzy_keys[fuzzy_key]]
@@ -241,12 +242,15 @@ fuzzy_keys = FuzzyFrozenDict(
 
 fuzzy_off_premise = defaultdict(Data)
 
-for key in off_premise:
+for i, key in enumerate(off_premise):
+    print(f"Progress: {i / len(off_premise):.1f}\r")
     address = f"{key.customer_name} | {key.address} | {key.city}"
     for fuzzy_key in fuzzy_keys.fuzzy().matches(address):
         fuzzy_data = fuzzy_off_premise[fuzzy_keys[fuzzy_key]]
         fuzzy_data.update(**asdict(off_premise[key]))
         break
+
+print(" " * 20)
 
 # Save results to a csv file.
 with open("Off-Premise.csv", mode="w", newline="", encoding="utf8") as file:
