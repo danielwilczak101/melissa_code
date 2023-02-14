@@ -53,9 +53,9 @@ class Key(NamedTuple):
     state: str
     zip: str
 
-    def upper(self):
-        """Update"""
-        return Key(*[key.upper() for key in self])
+    def clean(self):
+        """Clean the key of whitespaces and make it upper case."""
+        return Key(*[key.strip().upper() for key in self])
 
 
 # Create something to store the data.
@@ -119,7 +119,7 @@ with open(folder / "gallo_on_premise.csv", mode="r", newline="", encoding="utf8"
     for row in reader:
         # Parse the address.
         address = row
-        key = Key(row["Customer Name"], row["Address"], row["City"], row["State"], row["Zip"]).upper()
+        key = Key(row["Customer Name"], row["Address"], row["City"], row["State"], row["Zip"]).clean()
         data = on_premise[key]
         data.tdlinx = row["TDLinx Code"]
         data.channel = row["Channel"]
@@ -135,7 +135,7 @@ with open(folder / "spectra_on_premise.csv", mode="r", newline="", encoding="utf
         match = ADDRESS.match(row["Store Address"])
         if not match:
             raise ValueError("failed to parse address: " + row["Store Address"])
-        key = Key(row["Store Name"], *match.groups()).upper()
+        key = Key(row["Store Name"], *match.groups()).clean()
         data = on_premise[key]
         data.tdlinx = row[tdlinx_name]
         data.is_in_spectra = True
@@ -149,7 +149,7 @@ with open(folder / "spectra_off_premise.csv", mode="r", newline="", encoding="ut
         match = ADDRESS.match(row["Store Address"])
         if not match:
             raise ValueError("failed to parse address: " + row["Store Address"])
-        key = Key(row["Store Name"], *match.groups()).upper()
+        key = Key(row["Store Name"], *match.groups()).clean()
         data = off_premise[key]
         data.tdlinx = row[tdlinx_name]
         data.is_in_spectra = True
@@ -161,7 +161,7 @@ with open(folder / "ww_on_premise.csv", mode="r", newline="", encoding="utf8") a
     # https://docs.python.org/3/library/csv.html#csv.DictReader
     reader = DictReader(file)
     for row in reader:
-        key = Key(row["sold_to_name"], row["addrl1"], row["city"], "CA", row["zip"]).upper()
+        key = Key(row["sold_to_name"], row["addrl1"], row["city"], "CA", row["zip"]).clean()
         data = on_premise[key]
         data.license_number = row['License No.']
         data.sold_to = row['sold_to']
@@ -176,7 +176,7 @@ with open(folder / "ww_off_premise.csv", mode="r", newline="", encoding="utf8") 
     reader = DictReader(file)
     for row in reader:
         key = Key(row["sold_to_name"], row["addrl1"],
-                  row["city"], "CA", row["zip"]).upper()
+                  row["city"], "CA", row["zip"]).clean()
         data = off_premise[key]
         data.license_number = row['License No.']
         data.sold_to = row['sold_to']
