@@ -1,4 +1,6 @@
+"""Module providing regex functionality."""
 import re
+
 from collections import defaultdict
 from csv import DictReader, DictWriter
 from dataclasses import astuple, dataclass
@@ -9,7 +11,7 @@ from typing import NamedTuple, Optional
 #     Current directory: Path()
 #     Relative directory: Path("subfolder")
 #     Absolute directory: Path("C://directory path")
-folder = Path()
+folder = Path("files")
 
 # For parsing the address.
 # Uses "regex" to parse data, assuming a consistent format is provided.
@@ -44,6 +46,7 @@ ADDRESS = re.compile(f"{STREET}: {CITY} {STATE}: {ZIP}.*?")
 
 # For the composite key.
 class Key(NamedTuple):
+    """Update"""
     customer_name: str
     address: str
     city: str
@@ -51,15 +54,17 @@ class Key(NamedTuple):
     zip: str
 
     def upper(self):
+        """Update"""
         return Key(*[key.upper() for key in self])
 
 
 # Create something to store the data.
 @dataclass
 class Data:
+    """Update"""
     tdlinx: Optional[int] = None
     sold_to: Optional[str] = None
-    licence_number: Optional[str] = None
+    license_number: Optional[str] = None
     channel: Optional[str] = None
     sub_channel: Optional[str] = None
     is_in_spectra: bool = False
@@ -96,7 +101,7 @@ fieldnames = [
     "Premise",
     "TDLinx Code",
     "Sold to",
-    "Licence No.",
+    "License No.",
     "Channel / Trad Channel",
     "Sub-Channel / Sub Trade Channel",
     "IN SPECTRA",
@@ -107,15 +112,14 @@ fieldnames = [
 # Convert excel sheets to csv files.
 
 # Load the Gallo file.
-with open(folder / "gallo_on_premise.csv", mode="r", newline="") as file:
+with open(folder / "gallo_on_premise.csv", mode="r", newline="", encoding="utf8") as file:
     # Use csv.DictReader to read each row.
     # https://docs.python.org/3/library/csv.html#csv.DictReader
     reader = DictReader(file)
     for row in reader:
         # Parse the address.
         address = row
-        key = Key(row["Customer Name"], row["Address"],
-                  row["City"], row["State"], row["Zip"]).upper()
+        key = Key(row["Customer Name"], row["Address"], row["City"], row["State"], row["Zip"]).upper()
         data = on_premise[key]
         data.tdlinx = row["TDLinx Code"]
         data.channel = row["Channel"]
@@ -123,30 +127,28 @@ with open(folder / "gallo_on_premise.csv", mode="r", newline="") as file:
         data.is_in_gallow = True
 
 # Load the Spectra on-premise file.
-with open(folder / "spectra_on_premise.csv", mode="r", newline="") as file:
+with open(folder / "spectra_on_premise.csv", mode="r", newline="", encoding="utf8") as file:
     reader = DictReader(file)
     tdlinx_name = reader.fieldnames[0]
     for row in reader:
         # Parse the store address.
         match = ADDRESS.match(row["Store Address"])
         if not match:
-            raise ValueError("failed to parse address: " +
-                             row["Store Address"])
+            raise ValueError("failed to parse address: " + row["Store Address"])
         key = Key(row["Store Name"], *match.groups()).upper()
         data = on_premise[key]
         data.tdlinx = row[tdlinx_name]
         data.is_in_spectra = True
 
 # Load the Spectra on-premise file.
-with open(folder / "spectra_off_premise.csv", mode="r", newline="") as file:
+with open(folder / "spectra_off_premise.csv", mode="r", newline="", encoding="utf8") as file:
     reader = DictReader(file)
     tdlinx_name = reader.fieldnames[0]
     for row in reader:
         # Parse the store address.
         match = ADDRESS.match(row["Store Address"])
         if not match:
-            raise ValueError("failed to parse address: " +
-                             row["Store Address"])
+            raise ValueError("failed to parse address: " + row["Store Address"])
         key = Key(row["Store Name"], *match.groups()).upper()
         data = off_premise[key]
         data.tdlinx = row[tdlinx_name]
@@ -154,13 +156,12 @@ with open(folder / "spectra_off_premise.csv", mode="r", newline="") as file:
 
 # Do the same for other files.
 # Load the file. Convert excel sheets to csv files.
-with open(folder / "ww_on_premise.csv", mode="r", newline="") as file:
+with open(folder / "ww_on_premise.csv", mode="r", newline="", encoding="utf8") as file:
     # Use csv.DictReader to read each row.
     # https://docs.python.org/3/library/csv.html#csv.DictReader
     reader = DictReader(file)
     for row in reader:
-        key = Key(row["sold_to_name"], row["addrl1"],
-                  row["city"], "CA", row["zip"]).upper()
+        key = Key(row["sold_to_name"], row["addrl1"], row["city"], "CA", row["zip"]).upper()
         data = on_premise[key]
         data.license_number = row['License No.']
         data.sold_to = row['sold_to']
@@ -169,7 +170,7 @@ with open(folder / "ww_on_premise.csv", mode="r", newline="") as file:
 
 # Do the same for other files.
 # Load the file. Convert excel sheets to csv files.
-with open(folder / "ww_off_premise.csv", mode="r", newline="") as file:
+with open(folder / "ww_off_premise.csv", mode="r", newline="", encoding="utf8") as file:
     # Use csv.DictReader to read each row.
     # https://docs.python.org/3/library/csv.html#csv.DictReader
     reader = DictReader(file)
@@ -182,27 +183,27 @@ with open(folder / "ww_off_premise.csv", mode="r", newline="") as file:
         data.is_in_ww = True
 
 # Save results to a csv file.
-with open(folder / "On-Premise.csv", mode="w", newline="") as file:
+with open("On-Premise.csv", mode="w", newline="", encoding="utf8") as file:
     # Use csv.DictWriter to write each row.
     # https://docs.python.org/3/library/csv.html#csv.DictWriter
     writer = DictWriter(file, fieldnames)
     # Write the field names.
     writer.writeheader()
     # Write the rest of the rows.
-    for key, value in on_premise.items():
+    for key, data in on_premise.items():
         # Build a csv row.
         row = dict(zip(fieldnames, (*key, "On-Premise", *astuple(data))))
         writer.writerow(row)
 
 # Save results to a csv file.
-with open(folder / "Off-Premise.csv", mode="w", newline="") as file:
+with open("Off-Premise.csv", mode="w", newline="", encoding="utf8") as file:
     # Use csv.DictWriter to write each row.
     # https://docs.python.org/3/library/csv.html#csv.DictWriter
     writer = DictWriter(file, fieldnames)
     # Write the field names.
     writer.writeheader()
     # Write the rest of the rows.
-    for key, value in off_premise.items():
+    for key, data in off_premise.items():
         # Build a csv row.
         row = dict(zip(fieldnames, (*key, "Off-Premise", *astuple(data))))
         writer.writerow(row)
