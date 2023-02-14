@@ -5,7 +5,7 @@ from collections import defaultdict
 from csv import DictReader, DictWriter
 from dataclasses import asdict, astuple, dataclass
 from pathlib import Path
-from typing import NamedTuple, Optional
+from typing import NamedTuple, Optional, Any
 
 from fuzzy.collections import FuzzyFrozenDict
 
