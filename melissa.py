@@ -2,7 +2,14 @@ import re
 from collections import defaultdict
 from csv import DictReader, DictWriter
 from dataclasses import astuple, dataclass
+from pathlib import Path
 from typing import NamedTuple, Optional
+
+# The folder for everything:
+#     Current directory: Path()
+#     Relative directory: Path("subfolder")
+#     Absolute directory: Path("C://directory path")
+folder = Path()
 
 # For parsing the address.
 # Uses "regex" to parse data, assuming a consistent format is provided.
@@ -100,7 +107,7 @@ fieldnames = [
 # Convert excel sheets to csv files.
 
 # Load the Gallo file.
-with open("gallo_on_premise.csv", mode="r", newline="") as file:
+with open(folder / "gallo_on_premise.csv", mode="r", newline="") as file:
     # Use csv.DictReader to read each row.
     # https://docs.python.org/3/library/csv.html#csv.DictReader
     reader = DictReader(file)
@@ -116,7 +123,7 @@ with open("gallo_on_premise.csv", mode="r", newline="") as file:
         data.is_in_gallow = True
 
 # Load the Spectra on-premise file.
-with open("spectra_on_premise.csv", mode="r", newline="") as file:
+with open(folder / "spectra_on_premise.csv", mode="r", newline="") as file:
     reader = DictReader(file)
     tdlinx_name = reader.fieldnames[0]
     for row in reader:
@@ -131,7 +138,7 @@ with open("spectra_on_premise.csv", mode="r", newline="") as file:
         data.is_in_spectra = True
 
 # Load the Spectra on-premise file.
-with open("spectra_off_premise.csv", mode="r", newline="") as file:
+with open(folder / "spectra_off_premise.csv", mode="r", newline="") as file:
     reader = DictReader(file)
     tdlinx_name = reader.fieldnames[0]
     for row in reader:
@@ -147,7 +154,7 @@ with open("spectra_off_premise.csv", mode="r", newline="") as file:
 
 # Do the same for other files.
 # Load the file. Convert excel sheets to csv files.
-with open("ww_on_premise.csv", mode="r", newline="") as file:
+with open(folder / "ww_on_premise.csv", mode="r", newline="") as file:
     # Use csv.DictReader to read each row.
     # https://docs.python.org/3/library/csv.html#csv.DictReader
     reader = DictReader(file)
@@ -162,7 +169,7 @@ with open("ww_on_premise.csv", mode="r", newline="") as file:
 
 # Do the same for other files.
 # Load the file. Convert excel sheets to csv files.
-with open("ww_off_premise.csv", mode="r", newline="") as file:
+with open(folder / "ww_off_premise.csv", mode="r", newline="") as file:
     # Use csv.DictReader to read each row.
     # https://docs.python.org/3/library/csv.html#csv.DictReader
     reader = DictReader(file)
@@ -175,7 +182,7 @@ with open("ww_off_premise.csv", mode="r", newline="") as file:
         data.is_in_ww = True
 
 # Save results to a csv file.
-with open("On-Premise.csv", mode="w", newline="") as file:
+with open(folder / "On-Premise.csv", mode="w", newline="") as file:
     # Use csv.DictWriter to write each row.
     # https://docs.python.org/3/library/csv.html#csv.DictWriter
     writer = DictWriter(file, fieldnames)
@@ -188,7 +195,7 @@ with open("On-Premise.csv", mode="w", newline="") as file:
         writer.writerow(row)
 
 # Save results to a csv file.
-with open("Off-Premise.csv", mode="w", newline="") as file:
+with open(folder / "Off-Premise.csv", mode="w", newline="") as file:
     # Use csv.DictWriter to write each row.
     # https://docs.python.org/3/library/csv.html#csv.DictWriter
     writer = DictWriter(file, fieldnames)
