@@ -7,7 +7,7 @@ from dataclasses import asdict, astuple, dataclass
 from pathlib import Path
 from typing import NamedTuple, Optional
 
-from fuzzylib.collections import FuzzyFrozenDict
+from fuzzy.collections import FuzzyFrozenDict
 
 # The folder for everything:
 #     Current directory: Path()
