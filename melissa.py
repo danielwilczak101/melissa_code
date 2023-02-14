@@ -209,7 +209,8 @@ if empty in off_premise:
 
 fuzzy_keys = FuzzyFrozenDict(
     (f"{key.customer_name} | {key.address} | {key.city}", key)
-    for key in on_premise
+    for i, key in enumerate(on_premise)
+    if [print(f"Progress: {i / len(on_premise):.1%}\r")]
 )
 
 fuzzy_on_premise = defaultdict(Data)
@@ -237,7 +238,8 @@ with open("On-Premise.csv", mode="w", newline="", encoding="utf8") as file:
 
 fuzzy_keys = FuzzyFrozenDict(
     (f"{key.customer_name} | {key.address} | {key.city}", key)
-    for key in off_premise
+    for i, key in enumerate(off_premise)
+    if [print(f"Progress: {i / len(off_premise):.1%}\r")]
 )
 
 fuzzy_off_premise = defaultdict(Data)
