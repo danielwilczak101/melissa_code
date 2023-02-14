@@ -190,7 +190,7 @@ with open("On-Premise.csv", mode="w", newline="", encoding="utf8") as file:
     # Write the field names.
     writer.writeheader()
     # Write the rest of the rows.
-    for key, data in on_premise.items():
+    for key, data in sorted(on_premise.items()):
         # Build a csv row.
         row = dict(zip(fieldnames, (*key, "On-Premise", *astuple(data))))
         writer.writerow(row)
@@ -203,7 +203,7 @@ with open("Off-Premise.csv", mode="w", newline="", encoding="utf8") as file:
     # Write the field names.
     writer.writeheader()
     # Write the rest of the rows.
-    for key, data in off_premise.items():
+    for key, data in sorted(off_premise.items()):
         # Build a csv row.
         row = dict(zip(fieldnames, (*key, "Off-Premise", *astuple(data))))
         writer.writerow(row)

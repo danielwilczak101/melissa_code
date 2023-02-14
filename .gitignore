@@ -6,6 +6,10 @@ __pycache__/
 # C extensions
 *.so
 
+# Our files
+Off-Premise.csv
+On-Premise.csv
+
 # Distribution / packaging
 .Python
 build/
