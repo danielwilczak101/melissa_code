@@ -3,9 +3,11 @@ import re
 
 from collections import defaultdict
 from csv import DictReader, DictWriter
-from dataclasses import astuple, dataclass
+from dataclasses import asdict, astuple, dataclass
 from pathlib import Path
 from typing import NamedTuple, Optional
+
+from fuzzylib.collections import FuzzyFrozenDict
 
 # The folder for everything:
 #     Current directory: Path()
@@ -70,6 +72,21 @@ class Data:
     is_in_spectra: bool = False
     is_in_gallo: bool = False
     is_in_ww: bool = False
+
+    def update(self, **kwargs: Any) -> None:
+        if kwargs.get("tdlinx") is not None:
+            self.tdlinx = kwargs.pop("tdlinx")
+        if kwargs.get("sold_to") is not None:
+            self.sold_to = kwargs.pop("sold_to")
+        if kwargs.get("license_number") is not None:
+            self.license_number = kwargs.pop("license_number")
+        if kwargs.get("channel") is not None:
+            self.channel = kwargs.pop("channel")
+        if kwargs.get("sub_channel") is not None:
+            self.sub_channel = kwargs.pop("sub_channel")
+        self.is_in_spectra |= kwargs.get("is_in_spectra", False)
+        self.is_in_gallo |= kwargs.get("is_in_gallo", False)
+        self.is_in_ww |= kwargs.get("is_in_ww", False)
 
 
 # Create the tables for storing results.
@@ -190,6 +207,20 @@ if empty in on_premise:
 if empty in off_premise:
     del off_premise[empty]
 
+fuzzy_keys = FuzzyFrozenDict(
+    (f"{key.customer_name} | {key.address} | {key.city}", key)
+    for key in on_premise
+)
+
+fuzzy_on_premise = defaultdict(Data)
+
+for key in on_premise:
+    address = f"{key.customer_name} | {key.address} | {key.city}"
+    for fuzzy_key in fuzzy_keys.fuzzy().matches(address):
+        fuzzy_data = fuzzy_on_premise[fuzzy_keys[fuzzy_key]]
+        fuzzy_data.update(**asdict(on_premise[key]))
+        break
+
 # Save results to a csv file.
 with open("On-Premise.csv", mode="w", newline="", encoding="utf8") as file:
     # Use csv.DictWriter to write each row.
@@ -198,10 +229,24 @@ with open("On-Premise.csv", mode="w", newline="", encoding="utf8") as file:
     # Write the field names.
     writer.writeheader()
     # Write the rest of the rows.
-    for key, data in sorted(on_premise.items()):
+    for key, data in fuzzy_on_premise.items():
         # Build a csv row.
         row = dict(zip(fieldnames, (*key, "On-Premise", *astuple(data))))
         writer.writerow(row)
+
+fuzzy_keys = FuzzyFrozenDict(
+    (f"{key.customer_name} | {key.address} | {key.city}", key)
+    for key in off_premise
+)
+
+fuzzy_off_premise = defaultdict(Data)
+
+for key in off_premise:
+    address = f"{key.customer_name} | {key.address} | {key.city}"
+    for fuzzy_key in fuzzy_keys.fuzzy().matches(address):
+        fuzzy_data = fuzzy_off_premise[fuzzy_keys[fuzzy_key]]
+        fuzzy_data.update(**asdict(off_premise[key]))
+        break
 
 # Save results to a csv file.
 with open("Off-Premise.csv", mode="w", newline="", encoding="utf8") as file:
@@ -211,7 +256,7 @@ with open("Off-Premise.csv", mode="w", newline="", encoding="utf8") as file:
     # Write the field names.
     writer.writeheader()
     # Write the rest of the rows.
-    for key, data in sorted(off_premise.items()):
+    for key, data in fuzzy_off_premise.items():
         # Build a csv row.
         row = dict(zip(fieldnames, (*key, "Off-Premise", *astuple(data))))
         writer.writerow(row)
