@@ -207,21 +207,34 @@ if empty in on_premise:
 if empty in off_premise:
     del off_premise[empty]
 
-fuzzy_keys = FuzzyFrozenDict(
-    (f"{key.customer_name} | {key.address} | {key.city}", key)
-    for i, key in enumerate(on_premise)
-    if [print(f"Progress: {i / len(on_premise):.1%}\r")]
-)
+def fuzzy_filter(customers):
+    by_zip = defaultdict(list)
+    for key in customers:
+        by_zip[key.state, key.zip].append(key)
+    result = defaultdict(Data)
+    i = 0
+    for (state, zip), keys in by_zip.items():
+        D = FuzzyFrozenDict(
+            (f"{key.customer_name} | {key.address} | {key.city}", key)
+            for key in keys
+        )
+        for unique_key in D.fuzzy():
+            data = result[D[unique_key]]
+            for similar_key in D.fuzzy().matches(unique_key):
+                i += 1
+                print(end=f"Progress: {i / len(customers):6.1%}\r")
+                key = D[similar_key]
+                data.update(**asdict(customers[key]))
+    print(end="                \r")
+    return result
 
-fuzzy_on_premise = defaultdict(Data)
 
-for i, key in enumerate(on_premise):
-    print(f"Progress: {i / len(on_premise):.1%}\r")
-    address = f"{key.customer_name} | {key.address} | {key.city}"
-    for fuzzy_key in fuzzy_keys.fuzzy().matches(address):
-        fuzzy_data = fuzzy_on_premise[fuzzy_keys[fuzzy_key]]
-        fuzzy_data.update(**asdict(on_premise[key]))
-        break
+print("On premise:")
+on_premise = fuzzy_filter(on_premise)
+print("Progress: 100.0%")
+print("Off premise:")
+off_premise = fuzzy_filter(off_premise)
+print("Progress: 100.0%")
 
 # Save results to a csv file.
 with open("On-Premise.csv", mode="w", newline="", encoding="utf8") as file:
@@ -231,28 +244,10 @@ with open("On-Premise.csv", mode="w", newline="", encoding="utf8") as file:
     # Write the field names.
     writer.writeheader()
     # Write the rest of the rows.
-    for key, data in fuzzy_on_premise.items():
+    for key, data in sorted(on_premise.items()):
         # Build a csv row.
         row = dict(zip(fieldnames, (*key, "On-Premise", *astuple(data))))
         writer.writerow(row)
-
-fuzzy_keys = FuzzyFrozenDict(
-    (f"{key.customer_name} | {key.address} | {key.city}", key)
-    for i, key in enumerate(off_premise)
-    if [print(f"Progress: {i / len(off_premise):.1%}\r")]
-)
-
-fuzzy_off_premise = defaultdict(Data)
-
-for i, key in enumerate(off_premise):
-    print(f"Progress: {i / len(off_premise):.1%}\r")
-    address = f"{key.customer_name} | {key.address} | {key.city}"
-    for fuzzy_key in fuzzy_keys.fuzzy().matches(address):
-        fuzzy_data = fuzzy_off_premise[fuzzy_keys[fuzzy_key]]
-        fuzzy_data.update(**asdict(off_premise[key]))
-        break
-
-print(" " * 20)
 
 # Save results to a csv file.
 with open("Off-Premise.csv", mode="w", newline="", encoding="utf8") as file:
@@ -262,7 +257,7 @@ with open("Off-Premise.csv", mode="w", newline="", encoding="utf8") as file:
     # Write the field names.
     writer.writeheader()
     # Write the rest of the rows.
-    for key, data in fuzzy_off_premise.items():
+    for key, data in sorted(off_premise.items()):
         # Build a csv row.
         row = dict(zip(fieldnames, (*key, "Off-Premise", *astuple(data))))
         writer.writerow(row)
