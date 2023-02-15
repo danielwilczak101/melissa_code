@@ -3,7 +3,7 @@ import sys
 
 from collections import defaultdict
 from csv import DictReader, DictWriter
-from dataclasses import asdict, astuple, dataclass
+from dataclasses import asdict, astuple, dataclass, replace
 from pathlib import Path
 
 # Type hints:
@@ -11,9 +11,9 @@ from typing import Any, NamedTuple, Optional
 
 if sys.version_info < (3, 9):
     # Deprecated import.
-    from typing import Dict, Tuple
+    from typing import Dict, List, Tuple
 else:
-    from builtins import dict as Dict, tuple as Tuple
+    from builtins import dict as Dict, list as List, tuple as Tuple
 
 # Fuzzy searching package.
 # Use pip install easy-fuzzy
@@ -165,7 +165,7 @@ fieldnames = [
     "IN WW",
 ]
 
-dupe_fieldnames = ["Dupe" + column for column in fieldnames[:len(Key._fields)]] + fieldnames
+dupe_fieldnames = ["Dupe Group", *fieldnames]
 
 # Convert excel sheets to csv files.
 
@@ -251,8 +251,8 @@ if empty in off_premise:
 def fuzzy_filter(
     customers: Dict[Key, Data],
     *,
-    tolerance: float = 0.8,
-) -> Tuple[Dict[Key, Data], Dict[Key, Dict[Key, Data]]]:
+    tolerance: float = 0.9,
+) -> Tuple[Dict[Key, Data], List[Dict[Key, Data]]]:
     """
     Helper function for filtering customer data with fuzzy searching
     for the name and address. The state and zip must match for merges.
@@ -300,7 +300,7 @@ def fuzzy_filter(
                 {key: merged_data}.
             dupes:
                 A dictionary containing all of the duplicated
-                information as {fuzzy_key: {key: data}}.
+                information as [{key: data}].
     """
     # Group by zip and state.
     by_zip = defaultdict(list)
@@ -308,7 +308,7 @@ def fuzzy_filter(
         by_zip[key.state, key.zip].append(key)
     # Collect the results into a new dict.
     result = defaultdict(Data)
-    dupes = defaultdict(lambda: defaultdict(Data))
+    dupes = []
     progress = 0
     # Loop through each group.
     for keys in by_zip.values():
@@ -326,6 +326,8 @@ def fuzzy_filter(
             data = result[D[unique_key]]
             # Get similar keys.
             matches = D.fuzzy().matches(unique_key)
+            if len(matches) > 1:
+                dupes.append({})
             for similar_key in matches:
                 # Display the progress so far.
                 progress += 1
@@ -335,12 +337,11 @@ def fuzzy_filter(
                 # Update the customer.
                 data.update(**asdict(customers[key]))
                 if len(matches) > 1:
-                    dupes[D[unique_key]][key].update(**asdict(customers[key]))
+                    dupes[-1][key] = replace(customers[key])
     # Remove progress display.
     print(end="                \r")
     # Return results as a normal dictionary.
-    return dict(result), dict(zip(dupes, map(dict, dupes.values())))
-
+    return dict(result), dupes
 
 # Apply fuzzy filtering to the `on_premise` and `off_premise` dictionaries.
 print("On premise:")
@@ -371,10 +372,10 @@ with open("On-Premise-Dupes.csv", mode="w", newline="", encoding="utf8") as file
     # Write the field names.
     writer.writeheader()
     # Write the rest of the rows.
-    for unique_key, dupes in sorted(on_premise_dupes.items()):
+    for unique_key, dupes in enumerate(on_premise_dupes):
         for key, data in dupes.items():
             # Build a csv row.
-            row = dict(zip(dupe_fieldnames, (*unique_key, *key, "On-Premise", *astuple(data))))
+            row = dict(zip(dupe_fieldnames, (unique_key, *key, "On-Premise", *astuple(data))))
             writer.writerow(row)
 
 # Save results to a csv file.
@@ -398,8 +399,8 @@ with open("Off-Premise-Dupes.csv", mode="w", newline="", encoding="utf8") as fil
     # Write the field names.
     writer.writeheader()
     # Write the rest of the rows.
-    for unique_key, dupes in sorted(off_premise_dupes.items()):
+    for unique_key, dupes in enumerate(off_premise_dupes):
         for key, data in dupes.items():
             # Build a csv row.
-            row = dict(zip(dupe_fieldnames, (*unique_key, *key, "Off-Premise", *astuple(data))))
+            row = dict(zip(dupe_fieldnames, (unique_key, *key, "Off-Premise", *astuple(data))))
             writer.writerow(row)
