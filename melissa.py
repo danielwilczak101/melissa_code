@@ -207,7 +207,7 @@ if empty in on_premise:
 if empty in off_premise:
     del off_premise[empty]
 
-def fuzzy_filter(customers):
+def fuzzy_filter(customers, *, tolerance: float = 0.8):
     by_zip = defaultdict(list)
     for key in customers:
         by_zip[key.state, key.zip].append(key)
@@ -215,8 +215,11 @@ def fuzzy_filter(customers):
     i = 0
     for (state, zip), keys in by_zip.items():
         D = FuzzyFrozenDict(
-            (f"{key.customer_name} | {key.address} | {key.city}", key)
-            for key in keys
+            (
+                (f"{key.customer_name} | {key.address} | {key.city}", key)
+                for key in keys
+            ),
+            tolerance=0.8,
         )
         for unique_key in D.fuzzy():
             data = result[D[unique_key]]
